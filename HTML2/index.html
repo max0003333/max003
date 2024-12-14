@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find the Dinosaur Game</title>
+   
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            background-color: #87CEEB;  
+            color: #fff; 
+            overflow-y: scroll;  
+            height: 200vh;  
+            position: relative;  
+            transition: background-color 2s, color 2s; 
+        }
+        h1 {
+            color: #ecf0f1; /* Title color */
+            margin-bottom: 20px;
+        }
+        .grid {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 90%;
+            max-width: 320px;  
+            margin: 20px auto;
+            gap: 10px; /* Space between squares */
+            position: relative; /* Relative positioning for clouds */
+            z-index: 1; /* Ensure grid is above fireflies */
+        }
+        .square {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px; /* Rounded corners */
+            background-color: #fff; /* Square color */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+            transition: transform 0.2s, background-color 0.3s; /* Smooth transitions */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+            opacity: 1; /* Ensure boxes are fully visible */
+            animation: pop 0.5s forwards; /* Apply the pop animation */
+        }
+        .square:hover {
+            background-color: #bdc3c7; /* Gray on hover */
+            transform: scale(1.05); /* Slightly enlarge on hover */
+        }
+
+        /* Message Box Styles */
+        #messageBox {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            width: 250px;
+            padding: 15px;
+            background-color: rgba(52, 152, 219, 0.9); /* Semi-transparent blue */
+            border-radius: 10px; /* Rounded corners */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            opacity: 0; /* Start hidden */
+            transition: opacity 0.5s ease; /* Smooth fade-in */
+            z-index: 1000; /* Ensure it's above other elements */
+        }
+
+        #level, #chances {
+            font-size: 20px;
+            margin: 10px 0;
+        }
+        #chances {
+            color: #3498db; /* Blue color for chances */
+        }
+        #instructions {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #bbb; /* Lighter color for instructions */
+            display: none; /* Initially hidden */
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px; /* Rounded corners for the QR code */
+            margin-top: 20px;
+        }
+
+        /* Difficulty buttons */
+        .difficulty-buttons {
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #2ecc71; /* Green button */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #27ae60; /* Darker green on hover */
+        }
+
+        /* Animation styles */
+        @keyframes runAway {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(50px); }
+            100% { transform: translateX(-100px); opacity: 0; }
+        }
+ 
+        .dinosaur {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 80px; /* Increased size of dinosaur animation: runAway 1s forwards; /* Animation effect */
+        }
+
+        /* Box pop animation */
+        @keyframes pop {
+            0% { transform: scale(0); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        /* Chest styles */
+        .chest {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px; /* Adjust size of chest */
+            height: auto;
+            animation: popUp 0.5s forwards; /* Animation effect */
+        }
+
+        @keyframes popUp {
+            0% { transform: translateY(20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Fallen box styles */
+        .fallen {
+            animation: fallDown 0.5s forwards;
+        }
+
+        @keyframes fallDown {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100px); opacity: 0; }
+        }
+
+        /* Animation for dinosaur wave */
+        @keyframes wave {
+            0% { transform: translateY(0); }
+            25% { transform: translateY(-10px); }
+            50% { transform: translateY(0); }
+            75% { transform: translateY(10px); }
+            100% { transform: translateY(0); }
+        }
+
+        .laughing {
+            animation: laugh 1s infinite; /* Infinite laughing animation */
+        }
+
+        @keyframes laugh {
+            0% { transform: translateY(0); }
+            25% { transform: translateY(-10px); }
+            50% { transform: translateY(0); }
+            75% { transform: translateY(10px); }
+            100% { transform: translateY(0); }
+        }
+
+        /* Cloud styles */
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: moveClouds 30s linear infinite; /* Move clouds */
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes moveClouds {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Sun styles */
+        .sun {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 80px;
+            background: yellow;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
+            animation: moveSun 60s linear infinite; /* Move sun */
+        }
+
+        @keyframes moveSun {
+            0% { top: 20px; }
+            50% { top: 100px; }
+            100% { top: 20px; }
+        }
+
+        /* Night styles */
+        .night {
+            background-color: #2c3e50; /* Night background color */
+        }
+
+        /* Moon styles */
+        .moon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: #f0e68c;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(240, 230, 140, 0.5);
+            display: none; /* Hidden by default */
+        }
+
+        /* Star styles */
+        .star {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            animation: twinkle 1.5s infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Shooting star styles */
+        .shooting-star {
+            position: absolute;
+            width:2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8 );
+            animation: shoot 1s forwards;
+        }
+
+        @keyframes shoot {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(100vw);
+                opacity: 0;
+            }
+        }
+
+        /* Menu styles */
+        .menu {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+        .menu div {
+            width: 30px;
+            height: 4px;
+            background-color: white;
+            margin: 5px 0;
+            transition: all 0.3s ease;
+        }
+        .menu.open div:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+        .menu.open div:nth-child(2) {
+            opacity: 0;
+        }
+        .menu.open div:nth-child(3) {
+            transform: rotate(-45deg) translate(5px, -5px);
+        }
+        .menu-content {
+            display: none;
+            position: absolute;
+            top: 40px;
+            left: 0;
+            background-color: rgba(22, 149, 234, 0.9);
+            border-radius: 5px;
+            padding: 10px;
+            z-index: 1000;
+        }
+        .menu-content a {
+            color: rgb(19, 3, 3);
+            text-decoration: none;
+            display: block;
+            margin: 5px 0;
+        }
+        .menu-content a:hover {
+            text-decoration: underline;
+        }
+
+        .modal-content {
+    background-color: #fff; /* White background */
+    border-radius: 10px; /* Rounded corners */
+    padding: 20px; /* Some padding */
+    text-align: center; /* Center text */
+    color: #000; /* Text color */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Shadow for depth */
+    width: 80%; /* Responsive width */
+    max-width: 500px; /* Max width for larger screens */
+}
+
+.close {
+    color: #aaa; /* Close button color */
+    float: right; /* Position to the right */
+    font-size: 28px; /* Size of close button */
+    font-weight: bold; /* Bold text */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+.close:hover,
+.close:focus {
+    color: black; /* Change color on hover */
+    text-decoration: none; /* No underline */
+    cursor: pointer; /* Pointer cursor */
+}
+.menu-content a {
+    color: #fff; /* White text color */
+    text-decoration: none; /* Remove underline */
+    display: block; /* Make links block elements */
+    padding: 10px; /* Add padding for better click area */
+    transition: background-color 0.3s; /* Smooth background color transition */
+}
+
+.menu-content a:hover {
+    background-color: rgba(255, 255, 255, 0.2); /* Light background on hover */
+}
+
+    </style>
+</head>
+<body>
+  
+
+    <div class="menu-content" id="menuContent">
+        <a href="#instructions" onclick="showInstructions()">Instructions For PC</a>
+        <a href="#" onclick="toggleDayNight()">Toggle Day/Night</a>
+        <a href="#" onclick="toggleGameMakerInfo()">Game Info</a>
+        <a href="#" onclick="toggleClouds()">Toggle Clouds</a>
+        <a href="https://www.instagram.com/?utm_source=pwa_homescreen&__pwa=1" target="_blank">Instagram</a>
+        <a href="https://wa.link/j3vnzc" target="_blank">WhatsApp</a>
+        <a href="#" onclick="shareGame()">Share Game</a>  
+        <button id="toggleMusicButton" onclick="toggleMusic()">Toggle Music</button>
+    </div>
+    
+    <div id="gameMakerInfo" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="toggleGameMakerInfo()">&times;</span>
+            <h2>Information</h2>
+            <p>Step:1 Select the difficulty which u want and click "Start Game" now you'r game start.
+               <br>
+              <br> Step:2 In game finde the Dinosaur in square box to click u have difficulty acoding chance to finde Dinosaur.
+             <br>
+               <br>step:3 In game u don't like the cloud to use a "Toggle cloud" to remove.
+<br>
+              <br> now u enjoy you'r game..
+            </p>
+        </div>
+    </div>
+
+    <body>
+        <audio id="backgroundMusic" loop>
+            <source src="flower.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+    
+       
+        
+        <!-- Other existing HTML content... -->
+    </body>
+    
+    <div class="menu" onclick="toggleMenu()">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+    <div class="menu-content" id="menuContent">
+        <a href="#instructions" onclick="showInstructions()">Instructions</a>
+        <a href="#" onclick="toggleDayNight()">Toggle Day/Night</a>
+    </div>
+    <h1>Find the Dinosaur!</h1>
+    <div id="level">Level: 1</div>
+    <div id="chances">Chances: 10</div>
+    <div class="grid" id="grid"></div>
+    <div id="messageBox"></div>
+    
+    <div class="difficulty-buttons">
+        <button onclick="setDifficulty(9, 'Easy')">Easy</button>
+        <button onclick="setDifficulty(16, 'Medium')">Medium</button>
+        <button onclick="setDifficulty(25, 'Hard')">Hard</button>
+        <button onclick="setDifficulty(36, 'Insane')">Insane</button>
+    </div>
+    
+    <button id="startButton" onclick="startGame()" style="display: inline-block;">Start Game</button>
+    <button id="cancelButton" onclick="cancelGame()" style="display: none;">Cancel Game</button>
+    
+    <div id="instructions">
+        <h2>Instructions for PC Users:</h2>
+        <p>1. Click on the squares to find the dinosaur!</p>
+        <p>2. You have a limited number of chances, so choose wisely.</p>
+        <p>3. If you find the dinosaur, you will level up and gain more chances!</p>
+        <p>4. Good luck and have fun!</p>
+    </div>
+
+    <div class="sun"></div>
+    <div class="moon"></div>
+    <div class="cloud" style="top: 50px; left: 10%; width: 120px; height: 70px;"></div>
+    <div class="cloud" style="top: 80px; left: 30%; width: 80px; height: 50px;"></div>
+    <div class="cloud" style="top: 150px; left: 60%; width: 100px; height: 60px;"></div>
+    <div class="cloud" style="top: 200px; left: 20%; width: 90px; height: 55px;"></div>
+    <div class="cloud" style="top: 250px; left: 50%; width: 110px; height: 65px;"></div>
+    <div class="cloud" style="top: 300px; left: 70%; width: 130px; height: 75px;"></div>
+    <div class="cloud" style="top: 350px; left:  40%; width: 70px; height: 45px;"></div>
+    <div class="cloud" style="top: 400px; left: 80%; width: 60px; height: 40px;"></div>
+    <div class="cloud" style="top: 450px; left: 20%; width: 150px; height: 90px;"></div>
+    <div class="cloud" style="top: 500px; left: 60%; width: 80px; height: 50px;"></div>
+    <div class="cloud" style="top: 600px; left: 60%; width: 80px; height: 50px;"></div>
+
+    
+
+    <script>
+        let dinosaurIndex;
+        let chances;
+        let initialBoxes = 9;  
+        let isNight = false; // Track if it's night
+        const starCount = 15; // Number of stars
+        const shootingStarInterval = 3000; // Interval for shooting stars
+        let shootingStarTimer; // Timer for shooting stars
+
+        const easing = (t) => t < 0.5 ? 2 * t * t : -1 + ((4 - (2 * t)) * t);
+
+        function toggleMenu() {
+            const menu = document.querySelector('.menu');
+            const menuContent = document.getElementById('menuContent');
+            menu.classList.toggle('open');
+            menuContent.style.display = menu.classList.contains('open') ? 'block' : 'none';
+        }
+
+        function showInstructions() {
+            const instructions = document.getElementById('instructions');
+            instructions.style.display = instructions.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function setDifficulty(boxCount, difficulty) {
+            initialBoxes = boxCount; // Set the number of boxes based on difficulty
+            document.getElementById('difficulty').innerText = `Difficulty: ${difficulty}`; // Show selected difficulty
+            document.querySelector('.difficulty-buttons').style.display = 'none'; // Hide difficulty buttons
+            startGame(); // Start the game with the selected difficulty
+        }
+
+        function startGame() {
+            level = 1; 
+            chances = 10;  
+            document.getElementById('level').innerText = `Level: ${level}`;
+            document.getElementById('chances').innerText = `Chances: ${chances}`;
+            document.getElementById('messageBox').innerText = ''; 
+            createGrid(initialBoxes);  
+
+            // Show the laughing dinosaur
+            const laughingDino = document.createElement('div');
+            laughingDino.className = 'dinosaur laughing'; // Add the laughing class
+            laughingDino.innerText = '🦖';
+            document.body.appendChild(laughingDino);
+
+            // Remove the laughing dinosaur after a few seconds
+            setTimeout(() => {
+                document.body.removeChild(laughingDino);
+            }, 3000); // Adjust time as needed
+
+            // Hide the Start Game button and show the Cancel Game button
+            document.getElementById('startButton').style.display = 'none';
+            document.getElementById('cancelButton').style.display = 'inline-block';
+
+            // Start the day-night cycle
+            setTimeout(changeToNight, 60000); // Change to night after 1 minute
+        }
+
+        function changeToNight() {
+            document.body.classList.add('night'); // Change background to night
+            isNight = true; // Set night flag
+            document.querySelector('.sun').style.display = 'none'; // Hide sun
+            document.querySelector('.moon').style.display = 'block'; // Show moon
+            createStars(); // Create stars for night
+            startShootingStars(); // Start shooting stars
+        }
+
+        function toggleDayNight() {
+            if (isNight) {
+                document.body.classList.remove('night'); // Change background to day
+                document.querySelector('.sun').style.display = 'block'; // Show sun
+                document.querySelector('.moon').style.display = 'none'; // Hide moon
+                isNight = false; 
+                clearInterval(shootingStarTimer); // Stop shooting stars
+                removeStars(); // Remove stars when switching to day
+            } else {
+                changeToNight(); // Change to night
+            }
+        }
+
+        function createStars() {
+            const starContainer = document.createElement('div');
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                setStarPosition(star);
+                starContainer.appendChild(star);
+            }
+            document.body.appendChild(starContainer);
+        }
+
+        function setStarPosition(star) {
+            star.style.left = Math.random() * 100 + 'vw'; // Random horizontal position
+            star.style.top = Math.random() * 100 + 'vh'; // Random vertical position
+            star.style.width = Math.random() < 0.5 ? '5px' : '8px'; // Random size for stars
+            star.style.height = star.style.width; // Keep it square
+        }
+
+        function startShootingStars() {
+            shootingStarTimer = setInterval(() => {
+                createShootingStar();
+            }, shootingStarInterval);
+        }
+
+        function createShootingStar() {
+            const shootingStar = document.createElement('div');
+            shootingStar.className = 'shooting-star';
+            setShootingStarPosition(shootingStar);
+            document.body.appendChild(shootingStar);
+
+            // Remove the shooting star after animation
+            shootingStar.addEventListener('animationend', () => {
+                document.body.removeChild(shootingStar);
+            });
+        }
+
+        function setShootingStarPosition(star) {
+            const startX = Math.random() * 100; // Random starting position
+            star.style.left = startX + 'vw';
+            star.style.top = '20vh'; // Start from the top of the viewport
+            star.style.transform = `translateX(-${startX}vw)`; // Adjust for starting position
+        }
+
+        function removeStars() {
+            const existingStars = document.querySelectorAll('.star');
+            existingStars.forEach(star => star.remove());
+        }
+
+        function createGrid(boxCount) {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = ''; 
+            dinosaurIndex = Math.floor(Math.random() * boxCount);
+
+            for (let i = 0; i < boxCount; i++) {
+                const square = document.createElement('div');
+                square.className = 'square';
+                square.onclick = () => checkSquare(i);
+                grid.appendChild(square);
+            }
+        }
+
+        function checkSquare(index) {
+            const messageBox = document.getElementById('messageBox');
+            chances--;  
+            document.getElementById('chances').innerText = `Chances: ${chances}`;
+
+            const squares = document.querySelectorAll('.square');
+
+            if (index === dinosaurIndex) {
+                messageBox.innerText = '🎉 You found the dinosaur! 🦖 Wow!';
+                messageBox.style.opacity = 1; // Show message box
+                setTimeout(() => { messageBox.style.opacity = 0; }, 3000); // Fade out after 3 seconds
+                revealDinosaur(squares, index);
+                revealChest(squares, index);
+                levelUp();
+            } else {
+                messageBox.innerText = '😢 No dinosaur here. Try again!';
+                messageBox.style.opacity = 1; // Show message box
+                setTimeout(() => { messageBox.style.opacity = 0; }, 3000); // Fade out after 3 seconds
+                const chest = document.createElement('img');
+                chest.className = 'chest';
+                chest.src = 'path/to/your/chest-image.png'; // Ensure this path is correct
+                squares[index].appendChild(chest);
+                squares[index].classList.add('fallen');
+                setTimeout(() => {
+                    squares[index].style.visibility = 'hidden';
+                }, 500);
+            }
+
+            if (chances <= 0) {
+                messageBox.innerText = '💔 You have no chances left. Game over!';
+                messageBox.style.opacity = 1; // Show message box
+                setTimeout(() => { messageBox.style.opacity = 0; }, 3000); // Fade out after 3 seconds
+                alert("Sorry, can't find me 🤣html👉"); // Dinosaur's message
+                document.getElementById('chances').innerText = 'Chances: 0';
+                
+                squares.forEach(square => square.onclick = null); // Disable further clicks
+            }
+        }
+
+        function revealDinosaur(squares, index) {
+            const dinosaur = document.createElement('div');
+            dinosaur.className = 'dinosaur wave'; // Add the wave animation class
+            dinosaur.innerText = '🦖';
+            squares[index].appendChild(dinosaur);
+
+            dinosaur.addEventListener('animationend', () => {
+                squares[index].removeChild(dinosaur);
+            });
+
+            squares.forEach((square, i) => {
+                if (i !== index) {
+                    square.style.visibility = 'hidden';  
+                }
+            });
+        }
+
+        function revealChest(squares, index) {
+            const chest = document.createElement('img');
+            chest.className = 'chest';
+            chest.src = 'path/to/your/chest-image.png'; // Ensure this path is correct
+            squares[index].appendChild(chest);
+        }
+
+        function levelUp() {
+            level++;
+            chances += 8; // Increase chances by 8 for each level
+            html
+            document.getElementById('level').innerText = `Level: ${level}`;
+            document.getElementById('chances').innerText = `Chances: ${chances}`;
+            if (level <= 50) {
+                alert('Congratulations! 🎉😍🫡 You leveled up!');
+                createGrid(initialBoxes + (level - 1) * 5);  
+            } else {
+                document.getElementById('messageBox').innerText = '🏆 You have completed all levels! 🎉';
+            }
+        }
+
+        function cancelGame() {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.innerText = '👋 Game has been canceled! Goodbye ! 🦖';
+            const dinosaur = document.createElement('div');
+            dinosaur.className = 'dinosaur';
+            dinosaur.innerText = '🦖';
+            document.body.appendChild(dinosaur);
+            dinosaur.style.animation = 'wave 1s infinite'; // Start waving animation
+
+            setTimeout(() => {
+                document.body.removeChild(dinosaur);
+                resetGame();
+            }, 3000); // Remove dinosaur after 3 seconds
+        }
+
+        function resetGame() {
+            document.getElementById('grid').innerHTML = ''; 
+            document.getElementById('level').innerText = 'Level: 1';
+            document.getElementById('chances').innerText = 'Chances: 10'; // Reset chances
+            document.getElementById('messageBox').innerText = ''; // Clear message box
+            chances = 10; // Reset chances
+
+            // Show the Start Game button and hide the Cancel Game button
+            document.getElementById('startButton').style.display = 'inline-block';
+            document.getElementById('cancelButton').style.display = 'none';
+            document.querySelector('.difficulty-buttons').style.display = 'block'; // Show difficulty buttons again
+        }
+
+        // Function to create and animate clouds
+        function createMovingClouds() {
+            for (let i = 1; i < 5; i++) {  
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud';
+                cloud.style.top = Math.random() * 100 + 'vh';  
+                cloud.style.left = Math.random() * 100 + 'vw';  
+                document.body.appendChild(cloud);
+            }
+        }
+
+        createMovingClouds();
+
+        function toggleGameMakerInfo() {
+    const infoDiv = document.getElementById('gameMakerInfo');
+    const body = document.body;
+
+    if (infoDiv.style.display === 'none' || infoDiv.style.display === '') {
+        infoDiv.style.display = 'flex'; // Use flex to center the modal
+        body.classList.add('blur'); // Add blur class to the body
+    } else {
+        infoDiv.style.display = 'none';
+        body.classList.remove('blur'); // Remove blur class from the body
+    }
+}
+
+
+let cloudsVisible = true; // Track the visibility of clouds
+
+function toggleClouds() {
+    const clouds = document.querySelectorAll('.cloud');
+    cloudsVisible = !cloudsVisible; // Toggle the visibility state
+
+    clouds.forEach(cloud => {
+        cloud.style.display = cloudsVisible ? 'block' : 'none'; // Show or hide clouds
+    });
+
+    const messageBox = document.getElementById('messageBox');
+    messageBox.innerText = cloudsVisible ? '☁️ Clouds are now visible!' : '☁️ Clouds are now hidden!';
+    messageBox.style.opacity = 1; // Show message box
+    setTimeout(() => { messageBox.style.opacity = 0; }, 3000); // Fade out after 3 seconds
+}
+function shareGame() {
+    const gameLink = window.location.href; // Get the current URL of the game
+    navigator.clipboard.writeText(gameLink) // Copy the link to the clipboard
+        .then(() => {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.innerText = '🔗 Game link copied to clipboard! Share it with your friends!';
+            messageBox.style.opacity = 1; // Show message box
+            setTimeout(() => { messageBox.style.opacity = 0; }, 3000); // Fade out after 3 seconds
+        })
+        .catch(err => {
+            console.error('Failed to copy: ', err);
+        });
+}
+function toggleMusic() {
+    const backgroundMusic = document.getElementById('backgroundMusic');
+    if (backgroundMusic.paused) {
+        backgroundMusic.play();
+    } else {
+        backgroundMusic.pause();
+    }
+}
+    </script>
+ 
+</body>
+</html>
